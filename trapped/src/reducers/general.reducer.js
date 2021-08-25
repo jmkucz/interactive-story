@@ -4,10 +4,13 @@ export const loginActionTypes = {
     typingExisting: "TYPING_EXISTING",
     typingNew: "TYPING_NEW",
     isNew: "NEW_USER",
+    falling: "FALLING"
 }
 
 export const homeActionTypes = {
     dialogueClick1: "DIALOGUE_CLICK1",
+    nameEntered: "ENTERED_NAME",
+    typingName: "TYPING_NAME"
 }
 
 function generalReducer (state, action) {
@@ -49,10 +52,29 @@ function generalReducer (state, action) {
                 baseState: 0,
             }
         }
+        case loginActionTypes.falling: {
+            return {
+                ...state,
+                falling: true,
+                unClicked: false
+            }
+        }
         case homeActionTypes.dialogueClick1: {
             return {
                 ...state,
                 click1: action.click
+            }
+        }
+        case homeActionTypes.typingName: {
+            return {
+                ...state,
+                fullName: action.name
+            }
+        }
+        case homeActionTypes.nameEntered: {
+            return {
+                ...state,
+                nameEnter: true
             }
         }
         default: {

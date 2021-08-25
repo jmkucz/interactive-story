@@ -33,7 +33,21 @@ const initialState = {
       baseState: 0,
       fullName: sessionStorage.getItem('fullname') || '',
       username: sessionStorage.getItem('username') || '',
-      authentic: sessionStorage.getItem('authentic') || false}
+      authentic: sessionStorage.getItem('authentic') || false,
+      fallen: sessionStorage.getItem('fallen') || false,
+      unClicked: sessionStorage.getItem('unClicked') || true}
+}
+
+const fallButtonStyle = {
+  align: "center",
+  spacing: 20,
+  bg: "black",
+  mb: 500,
+  mt: 400,
+  ml: 850,
+  mr: 550,
+  p: 10,
+  rounded: "lg"
 }
 
 
@@ -45,12 +59,19 @@ const Login = () => {
     baseState = sessionStorage.getItem('state') || '',
     fullName = sessionStorage.getItem('fullname') || '',
     username = sessionStorage.getItem('username') || '',
-    authentic = sessionStorage.getItem('authentic') || false}, dispatch] = React.useReducer(generalReducer, initialState)
+    authentic = sessionStorage.getItem('authentic') || false,
+    fallen = sessionStorage.getItem('fallen') || false,
+    unClicked = sessionStorage.getItem('unClicked') || true}, dispatch] = React.useReducer(generalReducer, initialState)
 
 
   const loginExisting = () => {
       Client.get("PlayerData?username=" + usernameInput)
       .then((res) => {
+          sessionStorage.setItem('username', usernameInput)
+          sessionStorage.setItem('authentic', res.data.authentic)
+          sessionStorage.setItem('fullname', res.data.fullname)
+          sessionStorage.setItem('state', res.data.currentLevel)
+
           dispatch({
           type: loginActionTypes.loginExisting,
           baseState: res.data.currentLevel,
@@ -58,10 +79,6 @@ const Login = () => {
           authentic: res.data.authentic,
           username: usernameInput
           })
-          sessionStorage.setItem('username', usernameInput)
-          sessionStorage.setItem('authentic', res.data.authentic)
-          sessionStorage.setItem('fullname', res.data.fullname)
-          sessionStorage.setItem('state', res.data.currentLevel)
       },
       (error) => {
           console.log(error)
@@ -82,49 +99,32 @@ const Login = () => {
       })
   }
 
-  const typingExisting = (input) => {
-      console.log(input)
-      console.log(sessionStorage)
-      sessionStorage.setItem("onLoad", "0")
-      dispatch({type: loginActionTypes.typingExisting,
-          input: input})
-  }
-
-  const typingNew = (input) => {
-      sessionStorage.setItem("onLoad", "0")
-      dispatch({type: loginActionTypes.typingNew,
-          input: input})
-  }
-
   const isNew = () => {
     dispatch({type: loginActionTypes.isNew,
       username: newUsernameInput})
   }
 
   function handleChange (e) {
-    typingExisting(e.target.value)
+    sessionStorage.setItem("onLoad", "0")
+    dispatch({type: loginActionTypes.typingExisting,
+          input: e.target.value})
   }
 
   function handleSubmit (e) {
     if( e.key === 'Enter') {
       loginExisting()
-      sessionStorage.setItem('username', username)
-      sessionStorage.setItem('authentic', authentic)
-      sessionStorage.setItem('fullname', fullName)
-      sessionStorage.setItem('state', baseState)
     }
   }
 
   function handleClick (e) {
     loginExisting()
-    sessionStorage.setItem('username', username)
-    sessionStorage.setItem('authentic', authentic)
-    sessionStorage.setItem('fullname', fullName)
-    sessionStorage.setItem('state', baseState)
+    console.log(sessionStorage)
   }
 
   function handleChangeNew (e) {
-    typingNew(e.target.value)
+    sessionStorage.setItem("onLoad", "0")
+    dispatch({type: loginActionTypes.typingNew,
+        input: e.target.value})
     console.log(sessionStorage)
     console.log(username)
   }
@@ -142,18 +142,25 @@ const Login = () => {
   function handleJumpNew (e) {
     if(!alreadyExists) {
       isNew()
-      sessionStorage.setItem('username', newUsernameInput)
+      sessionStorage.setItem('username', username)
       sessionStorage.setItem('authentic', authentic)
       sessionStorage.setItem('state', baseState)
+      sessionStorage.setItem('fullname', fullName)
     }
     console.log(sessionStorage)
     console.log(username)
     console.log(alreadyExists)
   }
+
+  function fall (e) {
+    dispatch({type: loginActionTypes.falling})
+    sessionStorage.setItem('unClicked', false)
+    sessionStorage.setItem('fallen', true)
+  }
   
     return (
       <>
-      {authentic ? null : <Flex bg="lightblue" height="max-content" >
+       {authentic ? null : <Flex bg="lightblue" height="max-content" >
         <SimpleGrid {...loginStyle} fontFamily="sans-serif" fontSize="xx-large">
           <Box {...upperBox} rounded="md">
             <header className="Login-header">
@@ -183,7 +190,14 @@ const Login = () => {
           </Box>
         </SimpleGrid>
       </Flex> }
-      {authentic ? <Home /> : null}
+      {authentic && unClicked ?
+      <Flex bg="black">
+        <SimpleGrid {...fallButtonStyle}>
+          <Button onClick={fall}>Enjoy your fall</Button>
+          <Box color="white" fontSize="7">Click above</Box>
+        </SimpleGrid>
+      </Flex> : null}
+      {fallen ? <Home /> : null}
       </>
     );
 }
